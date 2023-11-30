@@ -1,6 +1,44 @@
-import { Link } from "react-router-dom";
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 
 function SignUp() {
+  const [error, setError] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
+  const [formData, setFormData] = useState({});
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.id]: e.target.value,
+    });
+  };
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      setIsLoading(true);
+      const res = await fetch("/api/auth/signup", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+      const data = await res.json();
+      console.log(data);
+      if (data.success === false) {
+        setError(data.message);
+        setIsLoading(false);
+        return;
+      }
+      setIsLoading(false);
+      setError(null);
+      navigate("/sign-in");
+    } catch (error) {
+      setIsLoading(false);
+      setError(error.message);
+    }
+  };
+  console.log(formData);
   return (
     <div>
       <div
@@ -16,17 +54,18 @@ function SignUp() {
           <div className="p-3 max-w-lg mx-auto">
             <h1 className="text-2xl font-bold text-center pb-7">Sign Up</h1>
 
-            <form className="flex flex-col gap-4">
+            <form onSubmit={handleSubmit} className="flex flex-col gap-4">
               <div className="mb-3 space-y-2 w-full text-xs">
                 <label className="font-semibold text-gray-600 py-2">
                   Username
                 </label>
                 <input
-                  placeholder="Username"
                   className="block w-full text-grey-darker border border-grey-lighter rounded-lg h-10 px-4"
-                  required="required"
                   type="text"
                   id="username"
+                  onChange={handleChange}
+                  required="required"
+                  placeholder="Username"
                 />
               </div>
 
@@ -35,11 +74,12 @@ function SignUp() {
                   Email
                 </label>
                 <input
-                  placeholder="Email ID"
                   className="appearance-none block w-full bg-grey-lighter text-grey-darker border border-grey-lighter rounded-lg h-10 px-4"
-                  required="required"
                   type="text"
                   id="email"
+                  onChange={handleChange}
+                  required="required"
+                  placeholder="Email ID"
                 />
               </div>
 
@@ -50,17 +90,21 @@ function SignUp() {
 
                 <div className="flex flex-wrap items-stretch w-full mb-4 relative">
                   <input
-                    type="text"
                     className="flex-shrink flex-grow flex-auto leading-normal w-px border border-l-0 h-10 border-grey-light rounded-lg rounded-l-none px-3 relative focus:border-blue focus:shadow"
-                    placeholder="password"
+                    type="password"
                     id="password"
+                    onChange={handleChange}
+                    placeholder="password"
                   />
                 </div>
               </div>
 
               <div className="mt-5 text-right md:space-x-3 md:block flex flex-col-reverse">
-                <button className="mb-2 md:mb-0 bg-green-500 px-5 py-2 text-sm shadow-sm font-medium tracking-wider text-white rounded-full hover:shadow-lg hover:bg-green-600">
-                  Sign Up
+                <button
+                  disabled={isLoading}
+                  className="mb-2 md:mb-0 bg-green-500 px-5 py-2 text-sm shadow-sm font-medium tracking-wider text-white rounded-full hover:shadow-lg hover:bg-green-600"
+                >
+                  {isLoading ? "Signing Up" : "Sign Up"}
                 </button>
               </div>
             </form>
@@ -73,6 +117,7 @@ function SignUp() {
                   Sign In
                 </span>
               </Link>
+              {error && <p className="text-red-500 mt-5">{error}</p>}
             </div>
           </div>
         </div>
