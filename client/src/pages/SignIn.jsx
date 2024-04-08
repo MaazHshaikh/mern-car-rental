@@ -1,10 +1,16 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  signInStart,
+  signInFailure,
+  signInSuccess,
+} from "../redux/user/userSlice";
 
 function SignIn() {
-  const [error, setError] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const { loading, error } = useSelector((state) => state.user);
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const [formData, setFormData] = useState({});
   const handleChange = (e) => {
     setFormData({
@@ -15,7 +21,7 @@ function SignIn() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      setIsLoading(true);
+      dispatch(signInStart());
       const res = await fetch("/api/auth/signin", {
         method: "POST",
         headers: {
@@ -26,19 +32,15 @@ function SignIn() {
       const data = await res.json();
       console.log(data);
       if (data.success === false) {
-        setError(data.message);
-        setIsLoading(false);
+        dispatch(signInFailure(data.message));
         return;
       }
-      setIsLoading(false);
-      setError(null);
+      dispatch(signInSuccess(data));
       navigate("/");
     } catch (error) {
-      setIsLoading(false);
-      setError(error.message);
+      dispatch(signInFailure(error.message));
     }
   };
-  console.log(formData);
   return (
     <div>
       <div
@@ -87,10 +89,10 @@ function SignIn() {
 
               <div className="mt-5 text-right md:space-x-3 md:block flex flex-col-reverse">
                 <button
-                  disabled={isLoading}
+                  disabled={loading}
                   className="mb-2 md:mb-0 bg-green-500 px-5 py-2 text-sm shadow-sm font-medium tracking-wider text-white rounded-full hover:shadow-lg hover:bg-green-600"
                 >
-                  {isLoading ? "Signing In" : "Sign In"}
+                  {loading ? "Signing In" : "Sign In"}
                 </button>
               </div>
             </form>
